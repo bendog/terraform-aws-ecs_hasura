@@ -33,7 +33,7 @@ resource "aws_cloudwatch_log_group" "log_group" {
 
 module "ecs_hasura" {
   source  = "bendog/ecs_hasura/aws"
-  version = "0.2.0"
+  version = "0.3.1"
   
   project_name = "${var.project_name}"
   

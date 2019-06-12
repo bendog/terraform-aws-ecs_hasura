@@ -12,7 +12,7 @@ data "aws_iam_role" "ecs_task_execution_role" {
 # security group
 # ALB Security group
 # This is the group you need to edit if you want to restrict access to your application
-resource "aws_security_group" "lb" {
+resource "aws_security_group" "hasura_lb" {
   name        = "${var.project_name}-hasura-ecs-alb"
   description = "${var.project_name} controls access to the ALB"
   vpc_id      = "${var.aws_vpc_id}"
@@ -46,7 +46,7 @@ resource "aws_security_group" "hasura_tasks" {
     protocol        = "tcp"
     from_port       = "${var.hasura_port}"            # hasuras port
     to_port         = "${var.hasura_port}"
-    security_groups = ["${aws_security_group.lb.id}"]
+    security_groups = ["${aws_security_group.hasura_lb.id}"]
   }
 
   egress {
@@ -66,7 +66,7 @@ resource "aws_security_group" "hasura_tasks" {
 resource "aws_alb" "hasura" {
   name            = "${var.project_name}-hasura-lb"
   subnets         = "${var.aws_subnets}"
-  security_groups = ["${aws_security_group.lb.id}"]
+  security_groups = ["${aws_security_group.hasura_lb.id}"]
 
   tags = {
     project = "${var.project_name}"
