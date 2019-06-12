@@ -20,6 +20,10 @@ variable "subdomain" {
   description = "subdomain name for the load balancer"
 }
 
+variable "subdomain_evaluate_health" {
+  default = false
+}
+
 variable "certificate_domain" {
   type        = "string"
   description = "domain name for the certificate"

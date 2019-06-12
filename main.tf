@@ -147,8 +147,7 @@ resource "aws_route53_record" "dns_record" {
   alias {
     name    = "${aws_alb.hasura.dns_name}"
     zone_id = "${aws_alb.hasura.zone_id}"
-
-    # evaluate_target_health = true
+    evaluate_target_health = "${var.subdomain_evaluate_health}"
   }
 }
 
