@@ -204,7 +204,7 @@ resource "aws_ecs_task_definition" "hasura" {
         "options": {
             "awslogs-region": "${var.aws_region}",
             "awslogs-group": "${var.cloudwatch_log_group_name}",
-            "awslogs-stream-prefix": "${var.project_name}-hasura"
+            "awslogs-stream-prefix": "${aws_route53_record.dns_record.fqdn}"
         }
     }
   }
