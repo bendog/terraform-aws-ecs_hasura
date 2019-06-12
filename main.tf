@@ -74,7 +74,7 @@ resource "aws_security_group" "hasura_tasks" {
 
 # ALB
 
-resource "aws_alb" "hasura" {
+resource "aws_lb" "hasura" {
   name            = "${var.project_name}-hasura-lb"
   subnets         = "${var.aws_subnets}"
   security_groups = ["${aws_security_group.hasura_lb.id}"]
@@ -84,12 +84,22 @@ resource "aws_alb" "hasura" {
   }
 }
 
-resource "aws_alb_target_group" "hasura" {
+resource "aws_lb_target_group" "hasura" {
   name        = "${var.project_name}-hasura-tg"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = "${var.aws_vpc_id}"
   target_type = "ip"
+
+  health_check {
+    enabled             = "${var.health_check_enabled}"
+    interval            = "${var.health_check_interval}"
+    path                = "${var.health_check_path}"
+    timeout             = "${var.health_check_timeout}"
+    healthy_threshold   = "${var.health_check_healthy_threshold}"
+    unhealthy_threshold = "${var.health_check_healthy_threshold}"
+    matcher             = "${var.health_check_matcher}"
+  }
 
   tags = {
     project = "${var.project_name}"
@@ -97,19 +107,19 @@ resource "aws_alb_target_group" "hasura" {
 }
 
 # # Redirect all traffic from the ALB to the target group
-# resource "aws_alb_listener" "hasura" {
-#   load_balancer_arn = "${aws_alb.hasura.id}"
+# resource "aws_lb_listener" "hasura" {
+#   load_balancer_arn = "${aws_lb.hasura.id}"
 #   port              = "80"
 #   protocol          = "HTTP"
 
 #   default_action {
-#     target_group_arn = "${aws_alb_target_group.hasura.id}"
+#     target_group_arn = "${aws_lb_target_group.hasura.id}"
 #     type             = "forward"
 #   }
 # }
 
-resource "aws_alb_listener" "hasura" {
-  load_balancer_arn = "${aws_alb.hasura.id}"
+resource "aws_lb_listener" "hasura" {
+  load_balancer_arn = "${aws_lb.hasura.id}"
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -117,12 +127,12 @@ resource "aws_alb_listener" "hasura" {
 
   default_action {
     type             = "forward"
-    target_group_arn = "${aws_alb_target_group.hasura.id}"
+    target_group_arn = "${aws_lb_target_group.hasura.id}"
   }
 }
 
-resource "aws_alb_listener" "redirect" {
-  load_balancer_arn = "${aws_alb.hasura.id}"
+resource "aws_lb_listener" "redirect" {
+  load_balancer_arn = "${aws_lb.hasura.id}"
   port              = "80"
   protocol          = "HTTP"
 
@@ -145,8 +155,8 @@ resource "aws_route53_record" "dns_record" {
   zone_id = "${data.aws_route53_zone.domain.id}"
 
   alias {
-    name    = "${aws_alb.hasura.dns_name}"
-    zone_id = "${aws_alb.hasura.zone_id}"
+    name                   = "${aws_lb.hasura.dns_name}"
+    zone_id                = "${aws_lb.hasura.zone_id}"
     evaluate_target_health = "${var.subdomain_evaluate_health}"
   }
 }
@@ -208,7 +218,7 @@ DEFINITION
 
 resource "aws_ecs_service" "hasura" {
   depends_on = [
-    "aws_alb_listener.hasura",
+    "aws_lb_listener.hasura",
     "aws_ecs_task_definition.hasura",
   ]
 
@@ -225,7 +235,7 @@ resource "aws_ecs_service" "hasura" {
   }
 
   load_balancer {
-    target_group_arn = "${aws_alb_target_group.hasura.id}"
+    target_group_arn = "${aws_lb_target_group.hasura.id}"
     container_name   = "${var.project_name}-hasura"
     container_port   = "${var.hasura_port}"
   }

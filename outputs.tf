@@ -1,5 +1,5 @@
 output "hasura_alb_address" {
-  value = "${aws_alb.hasura.dns_name}"
+  value = "${aws_lb.hasura.dns_name}"
 }
 
 output "hasura_url" {
@@ -7,7 +7,7 @@ output "hasura_url" {
 }
 
 output "hasura_alb_id" {
-  value = "${aws_alb.hasura.id}"
+  value = "${aws_lb.hasura.id}"
 }
 
 output "hasura_access_key" {

@@ -61,6 +61,32 @@ variable "ecs_task_execution_role_name" {
   default     = "ecsTaskExecutionRole"
 }
 
+# health check settings
+
+variable "health_check_enabled" {
+  default = true
+}
+
+variable "health_check_interval" {
+  default = 30
+}
+
+variable "health_check_path" {
+  default = "/v1/version"
+}
+
+variable "health_check_timeout" {
+  default = 30
+}
+
+variable "health_check_healthy_threshold" {
+  default = 3
+}
+
+variable "health_check_matcher" {
+  default = "200,202"
+}
+
 # HASURA SETTINGS
 
 variable "hasura_access_key" {
