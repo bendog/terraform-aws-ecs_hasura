@@ -2,7 +2,6 @@ data "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.ecs_task_execution_role_name}"
 }
 
-
 # # Set up cloudwatch group and log stream and retain logs for 30 days
 
 # resource "aws_cloudwatch_log_stream" "hasura" {
@@ -10,12 +9,64 @@ data "aws_iam_role" "ecs_task_execution_role" {
 #   log_group_name = "${var.cloudwatch_log_group_name}"
 # }
 
+# security group
+# ALB Security group
+# This is the group you need to edit if you want to restrict access to your application
+resource "aws_security_group" "lb" {
+  name        = "${var.project_name}-ecs-alb"
+  description = "${var.project_name} controls access to the ALB"
+  vpc_id      = "${var.aws_vpc_id}"
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    project = "${var.project_name}"
+  }
+}
+
+# Traffic to the ECS Cluster should only come from the ALB
+resource "aws_security_group" "hasura_tasks" {
+  name        = "${var.project_name}-hasura-ecs-tasks"
+  description = "${var.project_name} allow inbound access from the ALB only"
+  vpc_id      = "${var.aws_vpc_id}"
+
+  ingress {
+    protocol        = "tcp"
+    from_port       = "${var.hasura_port}"            # hasuras port
+    to_port         = "${var.hasura_port}"
+    security_groups = ["${aws_security_group.lb.id}"]
+  }
+
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    project = "${var.project_name}"
+  }
+}
+
 # ALB
 
 resource "aws_alb" "hasura" {
   name            = "${var.project_name}-hasura-lb"
   subnets         = "${var.aws_subnets}"
-  security_groups = "${var.aws_securitygroups}"
+  security_groups = ["${aws_security_group.lb.id}"]
 
   tags = {
     project = "${var.project_name}"
@@ -114,7 +165,7 @@ resource "aws_ecs_service" "hasura" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = "${var.aws_securitygroups}"
+    security_groups  = ["${aws_security_group.hasura_tasks.id}", "${var.aws_securitygroups}"]
     subnets          = "${var.aws_subnets}"
     assign_public_ip = true
   }
