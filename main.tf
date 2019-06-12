@@ -2,6 +2,17 @@ data "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.ecs_task_execution_role_name}"
 }
 
+data "aws_acm_certificate" "domaincert" {
+  domain      = "${var.certificate_domain}"
+  statuses    = ["ISSUED"]
+  types       = ["AMAZON_ISSUED"]
+  most_recent = true
+}
+
+data "aws_route53_zone" "domain" {
+  name = "${var.domain}."
+}
+
 # # Set up cloudwatch group and log stream and retain logs for 30 days
 
 # resource "aws_cloudwatch_log_stream" "hasura" {
@@ -44,7 +55,7 @@ resource "aws_security_group" "hasura_tasks" {
 
   ingress {
     protocol        = "tcp"
-    from_port       = "${var.hasura_port}"            # hasuras port
+    from_port       = "${var.hasura_port}"                   # hasuras port
     to_port         = "${var.hasura_port}"
     security_groups = ["${aws_security_group.hasura_lb.id}"]
   }
@@ -85,15 +96,59 @@ resource "aws_alb_target_group" "hasura" {
   }
 }
 
-# Redirect all traffic from the ALB to the target group
+# # Redirect all traffic from the ALB to the target group
+# resource "aws_alb_listener" "hasura" {
+#   load_balancer_arn = "${aws_alb.hasura.id}"
+#   port              = "80"
+#   protocol          = "HTTP"
+
+#   default_action {
+#     target_group_arn = "${aws_alb_target_group.hasura.id}"
+#     type             = "forward"
+#   }
+# }
+
 resource "aws_alb_listener" "hasura" {
+  load_balancer_arn = "${aws_alb.hasura.id}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${data.aws_acm_certificate.domaincert.arn}"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = "${aws_alb_target_group.hasura.id}"
+  }
+}
+
+resource "aws_alb_listener" "redirect" {
   load_balancer_arn = "${aws_alb.hasura.id}"
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = "${aws_alb_target_group.hasura.id}"
-    type             = "forward"
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+# setup DNS
+
+resource "aws_route53_record" "dns_record" {
+  name    = "${var.subdomain}"
+  type    = "A"
+  zone_id = "${data.aws_route53_zone.domain.id}"
+
+  alias {
+    name    = "${aws_alb.hasura.dns_name}"
+    zone_id = "${aws_alb.hasura.zone_id}"
+
+    # evaluate_target_health = true
   }
 }
 

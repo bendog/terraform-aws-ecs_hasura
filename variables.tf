@@ -10,6 +10,21 @@ variable "aws_region" {
   description = "the aws region to use for logging"
 }
 
+variable "domain" {
+  type        = "string"
+  description = "domain name to build the subdomain on"
+}
+
+variable "subdomain" {
+  type        = "string"
+  description = "subdomain name for the load balancer"
+}
+
+variable "certificate_domain" {
+  type        = "string"
+  description = "domain name for the certificate"
+}
+
 variable "aws_vpc_id" {
   type        = "string"
   description = "the AWS VPC id to run hasura in"
