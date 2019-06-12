@@ -3,7 +3,7 @@ output "hasura_alb_address" {
 }
 
 output "hasura_url" {
-  value = "${aws_route53_record.dns_record.dns_name}"
+  value = "${aws_route53_record.dns_record.fqdn}"
 }
 
 output "hasura_alb_id" {
