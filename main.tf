@@ -13,7 +13,7 @@ data "aws_iam_role" "ecs_task_execution_role" {
 # ALB Security group
 # This is the group you need to edit if you want to restrict access to your application
 resource "aws_security_group" "lb" {
-  name        = "${var.project_name}-ecs-alb"
+  name        = "${var.project_name}-hasura-ecs-alb"
   description = "${var.project_name} controls access to the ALB"
   vpc_id      = "${var.aws_vpc_id}"
 
