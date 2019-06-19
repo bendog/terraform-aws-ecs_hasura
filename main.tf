@@ -222,7 +222,7 @@ resource "aws_ecs_service" "hasura" {
 
   network_configuration {
     security_groups  = ["${aws_security_group.hasura_tasks.id}", "${var.aws_securitygroups}"]
-    subnets          = "${var.aws_subnets}"
+    subnets          = ["${var.aws_subnets}"]
     assign_public_ip = true
   }
 

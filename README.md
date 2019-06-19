@@ -93,15 +93,13 @@ module "ecs_hasura" {
 
 module "ecs_hasura" {
   source  = "bendog/ecs_hasura/aws"
-  version = "0.6.0"
+  version = "0.6.1"
   
   project_name = "${var.project_name}"
 
   domain = "mydomain.com"
   subdomain = "hasura.mydomain.com"
   certificate_domain = "*.mydomain.com"
-
-  hasura_graphql_jwt_secret_jwk_url = "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_xxxxxxxx/.well-known/jwks.json"
   
   aws_region = "${var.aws_region}"
   aws_vpc_id = "${var.aws_vpc_id}"
@@ -110,10 +108,12 @@ module "ecs_hasura" {
   aws_securitygroups = ["${var.aws_rds_security_group_id}"]
   cloudwatch_log_group_name = "${aws_cloudwatch_log_group.log_group.name}"
 
-  hasura_access_key = "myverysecrethasuraaccesskey"
   hasura_db_address = "my.database.address"
   hasura_db_user = "root"
   hasura_db_pass = "myverysecretpassword"
   hasura_db_name = "mydb"
+
+  hasura_access_key = "myverysecrethasuraaccesskey"
+  hasura_graphql_jwt_secret_jwk_url = "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_xxxxxxxx/.well-known/jwks.json"
 }
 ```
