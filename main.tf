@@ -13,15 +13,8 @@ data "aws_route53_zone" "domain" {
   name = "${var.domain}."
 }
 
-# # Set up cloudwatch group and log stream and retain logs for 30 days
-
-# resource "aws_cloudwatch_log_stream" "hasura" {
-#   name           = "hasura"
-#   log_group_name = "${var.cloudwatch_log_group_name}"
-# }
-
 # security group
-# ALB Security group
+# LB Security group
 # This is the group you need to edit if you want to restrict access to your application
 resource "aws_security_group" "hasura_lb" {
   name        = "${var.project_name}-hasura-ecs-alb"
@@ -113,18 +106,6 @@ resource "aws_lb_target_group" "hasura" {
   }
 }
 
-# # Redirect all traffic from the ALB to the target group
-# resource "aws_lb_listener" "hasura" {
-#   load_balancer_arn = "${aws_lb.hasura.id}"
-#   port              = "80"
-#   protocol          = "HTTP"
-
-#   default_action {
-#     target_group_arn = "${aws_lb_target_group.hasura.id}"
-#     type             = "forward"
-#   }
-# }
-
 resource "aws_lb_listener" "hasura" {
   load_balancer_arn = "${aws_lb.hasura.id}"
   port              = "443"
@@ -204,6 +185,10 @@ resource "aws_ecs_task_definition" "hasura" {
         {
             "name": "HASURA_GRAPHQL_DATABASE_URL",
             "value": "postgresql://${var.hasura_db_user}:${var.hasura_db_pass}@${var.hasura_db_address}/${var.hasura_db_name}"
+        },
+        {
+            "name": "HASURA_GRAPHQL_JWT_SECRET",
+            "value": "{\"type\":\"RS256\",\"jwk_url\": \"${var.hasura_graphql_jwt_secret_jwk_url}\",\"claims_format\": \"stringified_json\"}"
         }
     ],
     "logConfiguration": {

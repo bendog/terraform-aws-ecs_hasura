@@ -142,3 +142,7 @@ variable "hasura_count" {
   description = "Number of docker containers to run"
   default     = 1
 }
+
+variable "hasura_graphql_jwt_secret_jwk_url" {
+  description = "JWK URL for JWT decoding"
+}
