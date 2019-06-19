@@ -76,7 +76,7 @@ resource "aws_security_group" "hasura_tasks" {
 
 resource "aws_lb" "hasura" {
   name            = "${var.project_name}-hasura-lb"
-  subnets         = "${var.aws_subnets}"
+  subnets         = ["${var.aws_subnets}"]
   security_groups = ["${aws_security_group.hasura_lb.id}"]
 
   tags = {

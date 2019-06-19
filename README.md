@@ -93,7 +93,7 @@ module "ecs_hasura" {
 
 module "ecs_hasura" {
   source  = "bendog/ecs_hasura/aws"
-  version = "0.6.1"
+  version = "0.6.2"
   
   project_name = "${var.project_name}"
 
